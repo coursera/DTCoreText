@@ -11,6 +11,9 @@
 
 @class DTCoreTextLayoutFrame, DTTextAttachment;
 
+/**
+ A block that provides accessibility information for the passed text attachments
+ */
 typedef id(^DTAttachmentViewProvider)(DTTextAttachment *textAttachment);
 
 /**
@@ -23,7 +26,7 @@ typedef id(^DTAttachmentViewProvider)(DTTextAttachment *textAttachment);
  @param frame The <DTCoreTextLayoutFrame> to generate accessibility elements for.
  @param view The logical superview of the elements - the view that owns the local coordinate system for drawing the frame.
  @param block A callback block which takes a <DTTextAttachment> object and returns an object that conforms to the UIAccessibility informal protocol.
- @returns Returns an array of objects conforming to the UIAccessibility informal protocol, suitable for presentation fo the VoiceOver system.
+ @returns Returns an array of objects conforming to the UIAccessibility informal protocol, suitable for presentation for the VoiceOver system.
  */
 
 - (NSArray *)accessibilityElementsForLayoutFrame:(DTCoreTextLayoutFrame *)frame view:(UIView *)view attachmentViewProvider:(DTAttachmentViewProvider)block;

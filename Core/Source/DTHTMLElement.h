@@ -11,10 +11,10 @@
 @class DTTextAttachment;
 @class DTCSSListStyle;
 
+#import "DTCompatibility.h"
 #import "DTCoreTextConstants.h"
 #import "DTHTMLParserNode.h"
 #import "DTTextAttachment.h"
-#import "DTCompatibility.h"
 
 @class DTBreakHTMLElement;
 
@@ -98,7 +98,7 @@
  */
 
 /**
- Creates an `NSAttributedString` that represents the receiver including all its children. This method is typically overwritten in subclasses of <DTHTMLElement> that respresent specific HTML elements.
+ Creates an `NSAttributedString` that represents the receiver including all its children. This method is typically overwritten in subclasses of <DTHTMLElement> that represent specific HTML elements.
  @returns An attributed string that also contains the children
  */
 - (NSAttributedString *)attributedString;
@@ -322,12 +322,13 @@
  */
 
 /**
- Internal state during string building to mark the receiver als having been flushed
+ Internal state during string building to mark the receiver as having been flushed
  */
 @property (nonatomic, assign) BOOL didOutput;
 
 /**
- Internal method that determins if this element still requires output, based on its own didOutput state and the didOutput state of its children
+ Internal method that determines if this element still requires output, based on its own didOutput
+ state and the didOutput state of its children
  @returns `YES` if it still requires output
  */
 - (BOOL)needsOutput;

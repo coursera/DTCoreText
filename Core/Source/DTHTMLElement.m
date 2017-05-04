@@ -6,7 +6,6 @@
 //  Copyright 2011 Drobnik.com. All rights reserved.
 //
 
-#import "DTCoreText.h"
 #import "DTHTMLElement.h"
 #import "DTAnchorHTMLElement.h"
 #import "DTTextAttachmentHTMLElement.h"
@@ -15,9 +14,27 @@
 #import "DTListItemHTMLElement.h"
 #import "DTStylesheetHTMLElement.h"
 #import "DTTextHTMLElement.h"
-#import "NSString+DTUtilities.h"
+#import "DTTextBlock.h"
+#import "DTCSSListStyle.h"
+#import "NSString+HTML.h"
+#import "NSString+CSS.h"
+#import "NSString+Paragraphs.h"
 #import "DTColorFunctions.h"
-#import "DTLog.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "NSAttributedStringRunDelegates.h"
+
+#import "NSMutableAttributedString+HTML.h"
+#import "NSCharacterSet+HTML.h"
+
+#import <DTFoundation/DTLog.h>
+#import <DTFoundation/NSString+DTUtilities.h>
+
+#import <CoreText/CoreText.h>
+
+#if TARGET_OS_IPHONE
+#import "UIFont+DTCoreText.h"
+#endif
 
 @interface DTHTMLElement ()
 
@@ -160,7 +177,7 @@ NSDictionary *_classesForNames = nil;
 		[tmpDict setObject:_anchorName forKey:DTAnchorAttribute];
 	}
 	
-	// add strikout if applicable
+	// add strikeout if applicable
 	if (_strikeOut)
 	{
 #if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
@@ -265,7 +282,7 @@ NSDictionary *_classesForNames = nil;
 		}
 	}
 	
-	if (_letterSpacing)
+	if (_letterSpacing != 0)
 	{
 		NSNumber *letterSpacingNum = DTNSNumberFromCGFloat(_letterSpacing);
 		
@@ -301,12 +318,12 @@ NSDictionary *_classesForNames = nil;
 		[tmpDict setObject:(id)[_backgroundStrokeColor CGColor] forKey:DTBackgroundStrokeColorAttribute];
 	}
 	
-	if (_backgroundStrokeWidth)
+	if (_backgroundStrokeWidth != 0)
 	{
 		[tmpDict setObject:DTNSNumberFromCGFloat(_backgroundStrokeWidth) forKey:DTBackgroundStrokeWidthAttribute];
 	}
 	
-	if (_backgroundCornerRadius)
+	if (_backgroundCornerRadius != 0)
 	{
 		[tmpDict setObject:DTNSNumberFromCGFloat(_backgroundCornerRadius) forKey:DTBackgroundCornerRadiusAttribute];
 	}
@@ -880,26 +897,31 @@ NSDictionary *_classesForNames = nil;
 				}
 				
 				NSString *lowercaseFontFamily = [fontFamily lowercaseString];
+				NSString *lowercaseFontFamilyWithoutWhiteSpaces = [lowercaseFontFamily stringByReplacingOccurrencesOfString:@"\\s"
+																												 withString:@""
+																													options:NSRegularExpressionSearch
+																													  range:NSMakeRange(0, [lowercaseFontFamily length])];
+				NSArray *lowercaseFontFamilyWithoutWhiteSpacesArray = [lowercaseFontFamilyWithoutWhiteSpaces componentsSeparatedByString: @","];
 				
-				if ([lowercaseFontFamily rangeOfString:@"geneva"].length)
+				if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"geneva"] != NSNotFound)
 				{
 					_fontDescriptor.fontFamily = @"Helvetica";
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"cursive"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"cursive"] != NSNotFound)
 				{
 					_fontDescriptor.stylisticClass = kCTFontScriptsClass;
 					_fontDescriptor.fontFamily = nil;
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"sans-serif"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"sans-serif"] != NSNotFound)
 				{
 					// too many matches (24)
 					// fontDescriptor.stylisticClass = kCTFontSansSerifClass;
 					_fontDescriptor.fontFamily = @"Helvetica";
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"serif"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"serif"] != NSNotFound)
 				{
 					// kCTFontTransitionalSerifsClass = Baskerville
 					// kCTFontClarendonSerifsClass = American Typewriter
@@ -909,18 +931,18 @@ NSDictionary *_classesForNames = nil;
 					_fontDescriptor.fontFamily = @"Times New Roman";
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"fantasy"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"fantasy"] != NSNotFound)
 				{
 					_fontDescriptor.fontFamily = @"Papyrus"; // only available on iPad
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"monospace"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"monospace"] != NSNotFound)
 				{
 					_fontDescriptor.monospaceTrait = YES;
 					_fontDescriptor.fontFamily = @"Courier";
 					foundFontFamily = YES;
 				}
-				else if ([lowercaseFontFamily rangeOfString:@"times"].length)
+				else if ([lowercaseFontFamilyWithoutWhiteSpacesArray indexOfObject:@"times"] != NSNotFound)
 				{
 					_fontDescriptor.fontFamily = @"Times New Roman";
 					foundFontFamily = YES;
@@ -930,6 +952,7 @@ NSDictionary *_classesForNames = nil;
 					_fontDescriptor.fontFamily = self.parentElement.fontDescriptor.fontFamily;
 					foundFontFamily = YES;
 				}
+
 			}
 			
 			if (foundFontFamily)
@@ -1040,19 +1063,35 @@ NSDictionary *_classesForNames = nil;
 	{
 		if ([alignment isEqualToString:@"left"])
 		{
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+			self.paragraphStyle.alignment = kCTTextAlignmentLeft;
+#else
 			self.paragraphStyle.alignment = kCTLeftTextAlignment;
+#endif
 		}
 		else if ([alignment isEqualToString:@"right"])
 		{
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+			self.paragraphStyle.alignment = kCTTextAlignmentRight;
+#else
 			self.paragraphStyle.alignment = kCTRightTextAlignment;
+#endif
 		}
 		else if ([alignment isEqualToString:@"center"])
 		{
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+			self.paragraphStyle.alignment = kCTTextAlignmentCenter;
+#else
 			self.paragraphStyle.alignment = kCTCenterTextAlignment;
+#endif
 		}
 		else if ([alignment isEqualToString:@"justify"])
 		{
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+			self.paragraphStyle.alignment = kCTTextAlignmentJustified;
+#else
 			self.paragraphStyle.alignment = kCTJustifiedTextAlignment;
+#endif
 		}
 		else if ([alignment isEqualToString:@"inherit"])
 		{
@@ -1114,7 +1153,7 @@ NSDictionary *_classesForNames = nil;
 		}
 	}
 	
-	// if there is a text attachment we transfer the aligment we got
+	// if there is a text attachment we transfer the alignment we got
 	_textAttachment.verticalAlignment = _textAttachmentAlignment;
 	
 	id shadow = [styles objectForKey:@"text-shadow"];
@@ -1148,6 +1187,56 @@ NSDictionary *_classesForNames = nil;
 			self.paragraphStyle.maximumLineHeight = lineHeightValue;
 		}
 	}
+    
+    // Specializations on line-height:
+    
+    NSString *minimumLineHeight = [[styles objectForKey:@"minimum-line-height"] lowercaseString];
+    if (minimumLineHeight)
+    {
+        if ([minimumLineHeight isEqualToString:@"normal"])
+        {
+            // no op, that was already done above
+        }
+        else if ([minimumLineHeight isEqualToString:@"inherit"])
+        {
+            // no op, we already inherited it
+        }
+        else if ([minimumLineHeight isNumeric])
+        {
+            self.paragraphStyle.minimumLineHeight = [minimumLineHeight floatValue];
+        }
+        else // interpret as length
+        {
+            CGFloat minimumLineHeightValue = [minimumLineHeight pixelSizeOfCSSMeasureRelativeToCurrentTextSize:self.fontDescriptor.pointSize textScale:_textScale];
+            self.paragraphStyle.minimumLineHeight = minimumLineHeightValue;
+        }
+    }
+
+    NSString *maximumLineHeight = [[styles objectForKey:@"maximum-line-height"] lowercaseString];
+    if (maximumLineHeight)
+    {
+        if ([maximumLineHeight isEqualToString:@"normal"])
+        {
+            // no op, that was already done above
+        }
+        else if ([maximumLineHeight isEqualToString:@"inherit"])
+        {
+            // no op, we already inherited it
+        }
+        else if ([maximumLineHeight isNumeric])
+        {
+            self.paragraphStyle.minimumLineHeight = [maximumLineHeight floatValue];
+        }
+        else // interpret as length
+        {
+            CGFloat maximumLineHeightValue = [maximumLineHeight pixelSizeOfCSSMeasureRelativeToCurrentTextSize:self.fontDescriptor.pointSize textScale:_textScale];
+            self.paragraphStyle.maximumLineHeight = maximumLineHeightValue;
+        }
+    }
+
+    
+    // End Specializations on line-height
+
 	
 	NSString *fontVariantStr = [[styles objectForKey:@"font-variant"] lowercaseString];
 	if (fontVariantStr)
@@ -1291,7 +1380,7 @@ NSDictionary *_classesForNames = nil;
 		if (hasMargins)
 		{
 			self.paragraphStyle.paragraphSpacing = _margins.bottom;
-			
+			self.paragraphStyle.paragraphSpacingBefore = _margins.top;
 			// we increase the inherited values for the time being
 			self.paragraphStyle.headIndent += _margins.left;
 			self.paragraphStyle.firstLineHeadIndent = self.paragraphStyle.headIndent;

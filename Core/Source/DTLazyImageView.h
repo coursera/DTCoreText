@@ -6,7 +6,8 @@
 //  Copyright 2011 Drobnik.com. All rights reserved.
 //
 
-#import "DTWeakSupport.h"
+#import <DTFoundation/DTWeakSupport.h>
+#import "DTAttributedTextContentView.h"
 
 @class DTLazyImageView;
 
@@ -47,6 +48,11 @@ extern NSString * const DTLazyImageViewDidFinishDownloadNotification;
  The URL Request that is to be used for downloading the image. If this is left `nil` the a new URL Request will be created
  */
 @property (nonatomic, strong) NSMutableURLRequest *urlRequest;
+
+/**
+ The DTAttributedTextContentView used to display remote images with DTAttributedTextCell
+ */
+@property (nonatomic, DT_WEAK_PROPERTY) DTAttributedTextContentView *contentView;
 
 /**
  @name Getting Information

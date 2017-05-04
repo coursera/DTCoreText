@@ -31,9 +31,12 @@
 		_textAttachment = attachment;
 		
 		// to avoid much too much space before the image
+		if (nil == _paragraphStyle)
+			_paragraphStyle = [[DTCoreTextParagraphStyle alloc] init];
+
 		_paragraphStyle.lineHeightMultiple = 1;
 		
-		// specifiying line height interfers with correct positioning
+		// specifying line height interferes with correct positioning
 		_paragraphStyle.minimumLineHeight = 0;
 		_paragraphStyle.maximumLineHeight = 0;
 		

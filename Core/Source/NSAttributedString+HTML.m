@@ -7,12 +7,13 @@
 //
 
 #if TARGET_OS_IPHONE
-#import <CoreText/CoreText.h>
 #elif TARGET_OS_MAC
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-#import "DTCoreText.h"
+#import "DTHTMLElement.h"
+#import "DTCoreTextConstants.h"
+#import "DTHTMLAttributedStringBuilder.h"
 
 @implementation NSAttributedString (HTML)
 
@@ -50,7 +51,7 @@
 		[stringBuilder setWillFlushCallback:callBackBlock];
 	}
 	
-	// This needs to be on a seprate line so that ARC can handle releasing the object properly
+	// This needs to be on a separate line so that ARC can handle releasing the object properly
 	// return [stringBuilder generatedAttributedString]; shows leak in instruments
 	id string = [stringBuilder generatedAttributedString];
 	

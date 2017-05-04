@@ -6,10 +6,13 @@
 //  Copyright (c) 2012 Drobnik.com. All rights reserved.
 //
 
-#import "DTHTMLParser.h"
+#import <DTFoundation/DTHTMLParser.h>
 
 @class DTHTMLElement;
 
+/**
+ The block that gets executed whenever an element is flushed to the output string
+ */
 typedef void(^DTHTMLAttributedStringBuilderWillFlushCallback)(DTHTMLElement *);
 
 

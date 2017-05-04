@@ -6,10 +6,23 @@
 //  Copyright (c) 2012 Drobnik.com. All rights reserved.
 //
 
-#import "DTCoreText.h"
+#import "DTCompatibility.h"
 #import "NSAttributedString+DTCoreText.h"
 #import "DTHTMLWriter.h"
-#import "NSURL+DTComparing.h"
+#import "DTCoreTextConstants.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "DTCSSListStyle.h"
+#import "DTImageTextAttachment.h"
+#import "NSString+Paragraphs.h"
+#import "NSDictionary+DTCoreText.h"
+#import "NSAttributedStringRunDelegates.h"
+
+#import <DTFoundation/NSURL+DTComparing.h>
+
+#if TARGET_OS_IPHONE
+#import "UIFont+DTCoreText.h"
+#endif
 
 @implementation NSAttributedString (DTCoreText)
 
@@ -362,11 +375,19 @@
 		{
 			// first tab is to right-align bullet, numbering against
 			CGFloat tabOffset = paragraphStyle.headIndent - (CGFloat)5.0; // TODO: change with font size
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+			[paragraphStyle addTabStopAtPosition:tabOffset alignment:kCTTextAlignmentRight];
+#else
 			[paragraphStyle addTabStopAtPosition:tabOffset alignment:kCTRightTextAlignment];
+#endif
 		}
 		
 		// second tab is for the beginning of first line after bullet
+#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+		[paragraphStyle addTabStopAtPosition:paragraphStyle.headIndent alignment:kCTTextAlignmentLeft];
+#else
 		[paragraphStyle addTabStopAtPosition:paragraphStyle.headIndent alignment:kCTLeftTextAlignment];
+#endif
 	}
 	
 	if (font)

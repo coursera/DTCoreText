@@ -11,6 +11,7 @@
 #import <MediaPlayer/MediaPlayer.h>
 
 #import "DTTiledLayerWithoutFade.h"
+#import "DTWebVideoView.h"
 
 
 @interface DemoTextViewController ()
@@ -66,7 +67,6 @@
 #endif
 		
 		_segmentedControl = [[UISegmentedControl alloc] initWithItems:items];
-		_segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
 		_segmentedControl.selectedSegmentIndex = 0;
 		[_segmentedControl addTarget:self action:@selector(_segmentedControlChanged:) forControlEvents:UIControlEventValueChanged];
 		self.navigationItem.titleView = _segmentedControl;	
@@ -98,13 +98,13 @@
 {
 	NSMutableArray *toolbarItems = [NSMutableArray array];
 	
-	UIBarButtonItem *debug = [[UIBarButtonItem alloc] initWithTitle:@"Debug Frames" style:UIBarButtonItemStyleBordered target:self action:@selector(debugButton:)];
+	UIBarButtonItem *debug = [[UIBarButtonItem alloc] initWithTitle:@"Debug Frames" style:UIBarButtonItemStylePlain target:self action:@selector(debugButton:)];
 	[toolbarItems addObject:debug];
 	
 	UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
 	[toolbarItems addObject:space];
 	
-	UIBarButtonItem *screenshot = [[UIBarButtonItem alloc] initWithTitle:@"Screenshot" style:UIBarButtonItemStyleBordered target:self action:@selector(screenshot:)];
+	UIBarButtonItem *screenshot = [[UIBarButtonItem alloc] initWithTitle:@"Screenshot" style:UIBarButtonItemStylePlain target:self action:@selector(screenshot:)];
 	[toolbarItems addObject:screenshot];
 	
 	if (_segmentedControl.selectedSegmentIndex == 3)
@@ -112,7 +112,6 @@
 		if (!_htmlOutputTypeSegment)
 		{
 			_htmlOutputTypeSegment = [[UISegmentedControl alloc] initWithItems:@[@"Document", @"Fragment"]];
-			_htmlOutputTypeSegment.segmentedControlStyle = UISegmentedControlStyleBar;
 			_htmlOutputTypeSegment.selectedSegmentIndex = 0;
 			
 			[_htmlOutputTypeSegment addTarget:self action:@selector(_htmlModeChanged:) forControlEvents:UIControlEventValueChanged];
@@ -286,8 +285,6 @@
 	// this also compiles with iOS 6 SDK, but will work with later SDKs too
 	CGFloat topInset = [[self valueForKeyPath:@"topLayoutGuide.length"] floatValue];
 	CGFloat bottomInset = [[self valueForKeyPath:@"bottomLayoutGuide.length"] floatValue];
-	
-	NSLog(@"%f top", topInset);
 	
 	UIEdgeInsets outerInsets = UIEdgeInsetsMake(topInset, 0, bottomInset, 0);
 	UIEdgeInsets innerInsets = outerInsets;
@@ -741,7 +738,7 @@
 	
 	BOOL didUpdate = NO;
 	
-	// update all attachments that matchin this URL (possibly multiple images with same size)
+	// update all attachments that match this URL (possibly multiple images with same size)
 	for (DTTextAttachment *oneAttachment in [_textView.attributedTextContentView.layoutFrame textAttachmentsWithPredicate:pred])
 	{
 		// update attachments that have no original size, that also sets the display size
@@ -756,7 +753,10 @@
 	if (didUpdate)
 	{
 		// layout might have changed due to image sizes
-		[_textView relayoutText];
+		// do it on next run loop because a layout pass might be going on
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[_textView relayoutText];
+		});
 	}
 }
 

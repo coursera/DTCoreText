@@ -6,7 +6,10 @@
 //  Copyright (c) 2013 Drobnik.com. All rights reserved.
 //
 
-#import "DTCoreText.h"
+#import "DTVideoTextAttachment.h"
+#import "DTCoreTextConstants.h"
+#import "DTHTMLElement.h"
+#import "NSString+HTML.h"
 
 @implementation DTVideoTextAttachment
 
@@ -94,7 +97,7 @@
 	
 	for (__strong NSString *oneKey in [tmpAttributes allKeys])
 	{
-		oneKey = [oneKey stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		oneKey = [oneKey stringByAddingHTMLEntities];
 		NSString *value = [[tmpAttributes objectForKey:oneKey] stringByAddingHTMLEntities];
 		[retString appendFormat:@" %@=\"%@\"", oneKey, value];
 	}

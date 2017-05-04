@@ -6,7 +6,11 @@
 NSString * const NSBaseURLDocumentOption = @"NSBaseURLDocumentOption";
 NSString * const NSTextEncodingNameDocumentOption = @"NSTextEncodingNameDocumentOption";
 NSString * const NSTextSizeMultiplierDocumentOption = @"NSTextSizeMultiplierDocumentOption";
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_7_0
 NSString * const NSAttachmentAttributeName = @"NSAttachmentAttributeName";
+#endif
+
 #endif
 
 // custom options
@@ -28,6 +32,7 @@ NSString * const DTUseiOS6Attributes = @"DTUseiOS6Attributes";
 NSString * const DTWillFlushBlockCallBack = @"DTWillFlushBlockCallBack";
 NSString * const DTProcessCustomHTMLAttributes = @"DTProcessCustomHTMLAttributes";
 NSString * const DTIgnoreInlineStylesOption = @"DTIgnoreInlineStyles";
+NSString * const DTDocumentPreserveTrailingSpaces = @"DTDocumentPreserveTrailingSpaces";
 
 // attributed string attribute constants
 

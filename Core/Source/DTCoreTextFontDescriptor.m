@@ -6,9 +6,9 @@
 //  Copyright 2011 Drobnik.com. All rights reserved.
 //
 
+#import "DTCompatibility.h"
 #import "DTCoreTextFontDescriptor.h"
 #import "DTCoreTextFontCollection.h"
-#import "DTCompatibility.h"
 #import "DTCoreTextConstants.h"
 
 static NSCache *_fontCache = nil;
@@ -56,6 +56,10 @@ static BOOL _needsChineseFontCascadeFix = NO;
 	
 	// then - if it exists - we override from the plist
 	NSString *path = [[NSBundle bundleForClass:self] pathForResource:@"DTCoreTextFontOverrides" ofType:@"plist"];
+	if (!path) {
+		// If built as a dynamic framework we might need to look in the main bundle
+		path = [[NSBundle mainBundle] pathForResource:@"DTCoreTextFontOverrides" ofType:@"plist"];
+	}
 	NSArray *fileArray = [NSArray arrayWithContentsOfFile:path];
 	
 	for (NSDictionary *oneOverride in fileArray)
@@ -88,7 +92,7 @@ static BOOL _needsChineseFontCascadeFix = NO;
 // preloads all available system fonts for faster font matching
 + (void)asyncPreloadFontLookupTable
 {
-	// asynchronically load all available fonts into override table
+	// asynchronously load all available fonts into override table
 	[self _createDictionaryOfAllAvailableFontOverrideNamesWithCompletion:^(NSDictionary *dictionary) {
 		
 		// now we're done and we can merge the new dictionary synchronized

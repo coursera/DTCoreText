@@ -6,14 +6,28 @@
 //  Copyright (c) 2012 Drobnik.com. All rights reserved.
 //
 
-#import "DTCoreText.h"
+#import <DTFoundation/DTLog.h>
+#import <DTFoundation/DTHTMLParser.h>
+#import <DTFoundation/NSString+DTURLEncoding.h>
+
 #import "DTHTMLAttributedStringBuilder.h"
 
 #import "DTTextHTMLElement.h"
 #import "DTBreakHTMLElement.h"
 #import "DTStylesheetHTMLElement.h"
+#import "DTCSSStyleSheet.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "DTHTMLParserTextNode.h"
+
 #import "DTTextAttachmentHTMLElement.h"
-#import "DTLog.h"
+#import "DTColorFunctions.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "DTObjectTextAttachment.h"
+#import "DTVideoTextAttachment.h"
+
+#import "NSString+HTML.h"
+#import "NSCharacterSet+HTML.h"
+#import "NSMutableAttributedString+HTML.h"
 
 #if DEBUG_LOG_METRICS
 #import "NSString+DTFormatNumbers.h"
@@ -68,6 +82,7 @@
 	DTHTMLElement *_currentTag;
 	BOOL _ignoreParseEvents; // ignores events from parser after first HTML tag was finished
 	BOOL _ignoreInlineStyles; // ignores style blocks attached on elements
+	BOOL _preserverDocumentTrailingSpaces; // don't remove spaces at end of document
 }
 
 - (id)initWithHTML:(NSData *)data options:(NSDictionary *)options documentAttributes:(NSDictionary * __autoreleasing*)docAttributes
@@ -157,7 +172,7 @@
 	
 	// custom option to scale text
 	_textScale = [[_options objectForKey:NSTextSizeMultiplierDocumentOption] floatValue];
-	if (!_textScale)
+	if (_textScale==0)
 	{
 		_textScale = 1.0f;
 	}
@@ -322,6 +337,9 @@
 	// ignore inline styles if option is passed
 	_ignoreInlineStyles = [[_options objectForKey:DTIgnoreInlineStylesOption] boolValue];
 	
+	// don't remove spaces at end of document
+	_preserverDocumentTrailingSpaces = [[_options objectForKey:DTDocumentPreserveTrailingSpaces] boolValue];
+	
 	// create a parser
 	DTHTMLParser *parser = [[DTHTMLParser alloc] initWithData:_data encoding:encoding];
 	parser.delegate = (id)self;
@@ -403,6 +421,9 @@
 		}
 		
 		NSURL *link = [NSURL URLWithString:cleanString];
+        if (link == nil) {
+            link = [NSURL URLWithString:[cleanString stringByURLEncoding]];
+        }
 		
 		// deal with relative URL
 		if (![link scheme])
@@ -414,7 +435,7 @@
 				if (!link)
 				{
 					// NSURL did not like the link, so let's encode it
-					cleanString = [cleanString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+					cleanString = [cleanString stringByAddingHTMLEntities];
 					
 					link = [NSURL URLWithString:cleanString relativeToURL:_baseURL];
 				}
@@ -956,17 +977,18 @@
 
 - (void)parserDidEndDocument:(DTHTMLParser *)parser
 {
-
 	dispatch_group_async(_treeBuildingGroup, _treeBuildingQueue, ^{
 		NSAssert(!_currentTag, @"Something went wrong, at end of document there is still an open node");
 
-		dispatch_group_async(_stringAssemblyGroup, _stringAssemblyQueue, ^{
-			// trim off white space at end
-			while ([[_tmpString string] hasSuffixCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]])
-			{
-				[_tmpString deleteCharactersInRange:NSMakeRange([_tmpString length]-1, 1)];
-			}
-		});
+		if (!_preserverDocumentTrailingSpaces) {
+			dispatch_group_async(_stringAssemblyGroup, _stringAssemblyQueue, ^{
+				// trim off white space at end
+				while ([[_tmpString string] hasSuffixCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]])
+				{
+					[_tmpString deleteCharactersInRange:NSMakeRange([_tmpString length]-1, 1)];
+				}
+			});
+		}
 	});
 }
 

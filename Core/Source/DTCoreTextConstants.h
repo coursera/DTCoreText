@@ -32,7 +32,11 @@
 extern NSString * const NSBaseURLDocumentOption;
 extern NSString * const NSTextEncodingNameDocumentOption;
 extern NSString * const NSTextSizeMultiplierDocumentOption;
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_7_0
 extern NSString * const NSAttachmentAttributeName; 
+#endif
+
 #endif
 
 // custom options
@@ -55,6 +59,7 @@ extern NSString * const DTUseiOS6Attributes;
 extern NSString * const DTWillFlushBlockCallBack;
 extern NSString * const DTProcessCustomHTMLAttributes;
 extern NSString * const DTIgnoreInlineStylesOption;
+extern NSString * const DTDocumentPreserveTrailingSpaces;
 
 
 // attributed string attribute constants
@@ -154,7 +159,7 @@ typedef NS_ENUM(NSUInteger, DTHTMLElementFloatStyle)
 typedef NS_ENUM(NSUInteger, DTHTMLElementFontVariant)
 {
 	/**
-	 The element inherts the font variant
+	 The element inherits the font variant
 	 */
 	DTHTMLElementFontVariantInherit = 0,
 	

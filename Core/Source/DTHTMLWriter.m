@@ -7,9 +7,19 @@
 //
 
 #import "DTHTMLWriter.h"
-#import "DTCoreText.h"
 #import "DTVersion.h"
 #import "NSDictionary+DTCoreText.h"
+#import "DTCSSListStyle.h"
+#import "DTCoreTextConstants.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "NSAttributedString+DTCoreText.h"
+#import "NSAttributedString+HTML.h"
+#import "DTTextAttachment.h"
+#import "NSString+HTML.h"
+#import "DTColorFunctions.h"
+
+
 
 @implementation DTHTMLWriter
 {
@@ -32,6 +42,8 @@
 
 		// default is to leave px sizes as is
 		_textScale = 1.0f;
+		
+		_paragraphTagName = @"p";
 	}
 	
 	return self;
@@ -155,6 +167,13 @@
 			break;
 		}
 			
+		case DTCSSListStyleTypeUpperRoman:
+		{
+			typeString = @"upper-roman";
+			isOrdered = YES;
+			break;
+		}
+			
 		case DTCSSListStyleTypeLowerAlpha:
 		{
 			typeString = @"lower-alpha";
@@ -165,6 +184,13 @@
 		case DTCSSListStyleTypeLowerLatin:
 		{
 			typeString = @"lower-latin";
+			isOrdered = YES;
+			break;
+		}
+			
+		case DTCSSListStyleTypeLowerRoman:
+		{
+			typeString = @"lower-roman";
 			isOrdered = YES;
 			break;
 		}
@@ -420,7 +446,7 @@
 		}
 		else
 		{
-			blockElement = @"p";
+			blockElement = _paragraphTagName;
 		}
 		
 		NSNumber *headerLevel = [paraAttributes objectForKey:DTHeaderLevelAttribute];
@@ -680,7 +706,7 @@
 			
 			CGFloat kerning = [attributes kerning] / _textScale;
 			
-			if (kerning)
+			if (kerning != 0)
 			{
 				fontStyle = [fontStyle stringByAppendingFormat:@"letter-spacing:%.0fpx;", kerning];
 			}

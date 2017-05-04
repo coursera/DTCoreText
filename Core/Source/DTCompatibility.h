@@ -11,9 +11,9 @@
 #if TARGET_OS_IPHONE
 
 	// Compatibility Aliases
-	@compatibility_alias DTColor	UIColor;
-	@compatibility_alias DTImage	UIImage;
-	@compatibility_alias DTFont		UIFont;
+	#define DTColor UIColor
+	#define DTImage UIImage
+	#define DTFont UIFont
 
 	// Edge Insets
 	#define DTEdgeInsets UIEdgeInsets
@@ -37,6 +37,11 @@
 	// iOS 7 bug (rdar://14684188) workaround, can be removed once this bug is fixed
 	#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_6_1
 		#define DTCORETEXT_FIX_14684188 1
+	#endif
+
+	// use NSURLSession if NSURLConnection is deprecated
+	#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+		#define DTCORETEXT_USES_NSURLSESSION 1
 	#endif
 
 	// constant for checking for iOS 6
@@ -84,9 +89,9 @@
 #if !TARGET_OS_IPHONE
 
 	// Compatibility Aliases
-	@compatibility_alias DTColor	NSColor;
-	@compatibility_alias DTImage	NSImage;
-	@compatibility_alias DTFont		NSFont;
+	#define DTColor NSColor
+	#define DTImage NSImage
+	#define DTFont NSFont
 
 	// Edge Insets
 	#define DTEdgeInsets NSEdgeInsets
@@ -99,6 +104,11 @@
 	// theoretically MacOS before 10.8 might have a leak in CoreText replacing attributes
 	#if __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_7
 		#define DTCORETEXT_NEEDS_ATTRIBUTE_REPLACEMENT_LEAK_FIX 1
+	#endif
+
+	// use NSURLSession if NSURLConnection is deprecated
+	#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_10_11
+	#define DTCORETEXT_USES_NSURLSESSION 1
 	#endif
 
 	// NSValue has sizeValue on Mac, CGSizeValue on iOS

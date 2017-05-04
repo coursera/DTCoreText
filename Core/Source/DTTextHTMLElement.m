@@ -11,7 +11,7 @@
 #import "DTCoreTextFontDescriptor.h"
 #import "NSAttributedString+SmallCaps.h"
 
-#if DTCORETEXT_SUPPORT_NS_ATTRIBUTES && TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 #import "UIFont+DTCoreText.h"
 #endif
 
@@ -54,7 +54,7 @@
 			}
 			
 			// replace paragraph breaks with line breaks
-			// useing \r as to not confuse this with line feeds, but still get a single paragraph
+			// using \r as to not confuse this with line feeds, but still get a single paragraph
 			text = [text stringByReplacingOccurrencesOfString:@"\n" withString:@"\r"];
 		}
 		else if (_containsAppleConvertedSpace)
